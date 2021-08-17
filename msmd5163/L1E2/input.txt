@@ -1,0 +1,4 @@
+Hello.
+This is sentence.Add new text here
+New sentence was added using syncAppend.js.
+This sentence was added using asynAppend.js

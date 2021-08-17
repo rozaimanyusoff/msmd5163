@@ -1,0 +1,25 @@
+{
+  "name": "l3-restaurant-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.13.7"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rozaimanyusoff/msmd5163.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rozaimanyusoff/msmd5163/issues"
+  },
+  "homepage": "https://github.com/rozaimanyusoff/msmd5163#readme",
+  "description": ""
+}
