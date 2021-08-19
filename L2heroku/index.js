@@ -29,7 +29,7 @@ router.get('/goodbye/:name', (req, res) => {
     res.json({ message: 'Goodbye ' + req.params.name });
 });
 
-
+var id = require('mongoose').isValidObjectId;
 //1(c) Return sum of 2 numbers in body by POST method
 router.post('/sum', (req, res) => {
     var sum = req.body.num1 + req.body.num2;
