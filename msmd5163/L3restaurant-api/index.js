@@ -17,16 +17,13 @@ const Restaurant = require('./restaurant');
 app.use(express.urlencoded({extended:true}));
 app.use(express.json());
 
-var port = process.env.PORT || 8082; //set our port
 
 //Setting route and path
+app.use('/api', router);
 
 router.get('/', (req, res) => {
     res.json({ message: 'Hula! my API works!!!' })
 });
-
-
-
 
 
 //add new document
@@ -45,105 +42,277 @@ router.post('/restaurants', (req, res) => {
 
     //method save by mongoose to store newRestaurant model data in db
     newRestaurant.save((err) => {
-        if (err) res.json({ error: 'message' + err })
-        res.json({ message: 'Restaurant succesfully created!' });
+        if (err) {
+            res.json({ error: 'message' + err })
+        } else {
+            res.json({ message: 'Restaurant succesfully created!' });
+        }
+        
     });
 });
+/* {
+    "types": [
+        "Local taste"
+    ],
+    "name": "Restoran Mee Bandung",
+    "address": "Muar, Johor",
+    "email": "bandungtomuar@gmail.com",
+    "phone": "06-3333234",
+    "description": "Bandung's taste",
+    "opening_time": "10:00 AM",
+    "latitude": 2.324566,
+    "longitude": 121.2342345,
+    "reviews": [],
+    "menus": []
+} */
 
-//add menu into existing document
-router.post('/restaurants/:_id/menus', (req, res) => {
-    Restaurant.findOneAndUpdate(req.params._id, {"menus": {}}, (err, restaurant) => {
+//add menu into target document
+router.post('/restaurants/:id/menus', (req, res) => {
+    const id = req.params.id;
+    Restaurant.findByIdAndUpdate(id, {$push: req.body }, (err, restaurant) => {
         if (err) res.json({ error: 'message' + err });
-        res.json({ message: 'Restaurant succesfully updated!' });
+        res.json({ message: 'Menu succesfully added!' });
     });
 });
+/* 
+localhost:8082/api/restaurants/<OBJECT ID>/menus
+{
+    "menus": [
+        {
+            "name": "Tomyam Pizza",
+            "description": "Thai's flavoured pizza",
+            "price": 105,
+            "imageUrl": "https://pizzahutyee.net/tomyampizza.html"
+        },
+        {
+            "name": "Amerikana Brokoli's Pizza",
+            "description": "The great vegetarian pizza",
+            "price": 55,
+            "imageUrl": "https://pizzahutyee.net/brokolipizza.html"
+        }
+    ]
+} */
 
-//update documents
-router.post('/restaurants/:_id/reviews', (req, res) => {
+//Add reviews into target document
+router.post("/restaurants/:id/reviews", (req, res) => {
+    const id = req.params.id;
+    let reviews = req.body;
+  Restaurant.findByIdAndUpdate(id, { "$push": reviews }, (err, restaurant) => {
+    if (err) res.json({ error: "message" + err });
+    res.json({ message: "Review succesfully added!" });
+  });
+});
+/* 
+localhost:8082/api/restaurants/<OBJECT ID>/reviews
+{
+    "reviews":
+    [
+        {"username": "Mike Typeson",
+        "rating": 4,
+        "review": "Awesome!"
+        },
+        {"username": "Suthophone Mengkrap",
+        "rating": 3,
+        "review": "Sawadeekapp...hait!"
+        },
+        {"username": "Donalds Mcdonals",
+        "rating": 2,
+        "review": "Acceptable taste.."
+        }
+    ]
+} */
 
 
+
+//update subdocuments by id - Menus
+router.put('/restaurants/:id/menus/:menus_id', (req, res) => {
+    const id = req.params.id; //document id
+    const menus_id = req.params.menus_id; //subdocument id
+    let menus = req.body; //data from json
+
+    Restaurant.findOneAndUpdate(
+      { _id: id, "menus._id": menus_id },
+      { $set: { "menus.$": menus } },
+      (err, restaurant) => {
+        if (err) {
+          res.json({ error: "message" + err });
+        } else {
+          res.json({ message: "Menu succesfully updated!" });
+        }
+      }
+    );
 });
 
+/* 
+localhost:8082/api/restaurants/611e1c7b6057114aa7c3c580/menus/611e6cfa9f3aeb7d413b0e37
+{
+    "name": "Tomyam Pizza A+",
+    "description": "Thai's flavoured pizza made from popular Bangkok's streets",
+    "price": 125,
+    "imageUrl": "https://pizzahutyee.net/tomyampizza.html"
+} */
 
 
+//update subdocuments by id - Reviews
+router.put('/restaurants/:id/reviews/:review_id', (req, res) => {
+    const id = req.params.id; //document id
+    const review_id = req.params.review_id; //subdocument id
+    let reviews = req.body; //data from json
 
-//update documents
-router.put('/restaurants/:_id/menus/:menu_id', (req, res) => {
-
+    Restaurant.findOneAndUpdate(
+      { _id: id, "reviews._id": review_id },
+      { $set: { "reviews.$": reviews } },
+      (err, restaurant) => {
+        if (err) {
+          res.json({ error: "message" + err });
+        } else {
+          res.json({ message: "Review succesfully updated!" });
+        }
+      }
+    );
 });
 
-//update documents
-router.put('/restaurants/:_id/reviews/:review_id', (req, res) => {
+/* 
+localhost:8082/api/restaurants/611e7f217d058e8cb292bad5/reviews/611e801f7d058e8cb292badd
+{
+    "username": "Donalds McDonalds",
+    "rating": 2,
+    "review": "Acceptable taste.."
+} */
 
+
+//delete subdocuments - Menus
+router.delete("/restaurants/:id/menus/:menus_id", (req, res) => {
+  const id = req.params.id; //document id
+  const menus_id = req.params.menus_id; //subdocument id
+
+  Restaurant.findOneAndUpdate(
+    { _id: id },
+    { $pull: { "menus": {_id: menus_id} } },
+    (err, restaurant) => {
+      if (err) {
+        res.json({ error: "message" + err });
+      } else {
+        res.json({ message: "Menu succesfully deleted!" });
+      }
+    }
+  );
 });
 
+/* 
+localhost:8082/api/restaurants/611e8c93a6cb5595f7deb100/menus/611e8cdaa6cb5595f7deb10c
+*/
 
-
-
-//delete document
-router.delete('/restaurants/:id/menus/:menu_id', (req, res) => {
-
-});
-
-//delete specific data in documents
+//delete subdocuments - Reviews
 router.delete('/restaurants/:id/reviews/:review_id', (req, res) => {
-    
+    const id = req.params.id; //document id
+    const review_id = req.params.review_id; //subdocument id
+  
+    Restaurant.findOneAndUpdate(
+      { _id: id },
+      { $pull: { "reviews": {_id: review_id} } },
+      (err, restaurant) => {
+        if (err) {
+          res.json({ error: "message" + err });
+        } else {
+          res.json({ message: "Review succesfully deleted!" });
+        }
+      }
+    );
 });
 
+/* 
+localhost:8082/api/restaurants/611e8c93a6cb5595f7deb100/reviews/611e8d11a6cb5595f7deb114
+*/
 
 
 
 
-//filter documents
+
+//filter subdocuments by subdocument_id - Reviews
 router.get('/restaurants/:id/reviews/:review_id', (req, res) => {
-
-
-});
-
-
-//filter documents
-router.get('/restaurants/:id/menus', (req, res) => {
-    Restaurant.findById((err, restaurant) => {
+    const id = req.params.id;
+    const review_id = req.params.review_id;
+    Restaurant.findById({_id: id}, {"_id":review_id, }, (err, restaurant) => {
         if (err) res.json({ error: "Getting error!" + err });
-        res.json({ message: "Fetching restaurant with id..", data: restaurant });
+        res.json(restaurant);
     });
 });
 
-//filter documents
-router.get('/restaurants/:res_id/menus/:menu_id', (req, res) => {
 
+//filter documents
+router.get('/restaurants/:id/menus/:menus_id', (req, res) => {
+    const id = req.params.id;
+    Restaurant.findById(id, {"menus": {_id: req.params.menus_id}}, (err, restaurant) => {
+        if (err) res.json({ error: "Getting error!" + err });
+        res.json(restaurant);
+    });
 });
 
+
+
+//filter documents by id - Menus
+router.get("/restaurants/:id/menus", (req, res) => {
+  const id = req.params.id;
+  Restaurant.findById(id, "menus", (err, restaurant) => {
+    if (err) {
+      res.json({ error: "Getting error!" + err });
+    } else {
+      res.json(restaurant);
+    }
+  });
+});
+/* 
+localhost:8082/api/restaurants/611e8c93a6cb5595f7deb100/menus
+*/
+
+
 //filter documents
-router.get('/restaurants/:_id/reviews', (req, res) => {
-    Restaurant.find(req.params._id.reviews, (err, restaurant) => {
+router.get('/restaurants/:id/reviews', (req, res) => {
+  const id = req.params.id;
+    Restaurant.findById(id, "reviews", (err, restaurant) => {
         if(err) {
              res.json({ error: "Getting error!" + err });
         } else {
-            res.json({ message: "Fetching restaurant info by id:", data: restaurant });
+            res.json(restaurant);
         }
     });
 });
-
+/* 
+localhost:8082/api/restaurants/611e8c93a6cb5595f7deb100/reviews
+*/
 
 //Filter document by id
-router.get('/restaurants/:_id', (req, res) => {
-    Restaurant.findById(req.params._id, (err, restaurant) => {
-        if(err) {
-             res.json({ error: "Getting error!" + err });
-        } else {
-            res.json({ message: "Fetching restaurant info for id: "+req.params._id, data: restaurant });
-        }
-    });
+router.get("/restaurants/:id", (req, res) => {
+  const id = req.params.id;
+  Restaurant.findById(id, (err, restaurant) => {
+    if (err) {
+      res.json({ error: "Getting error!" + err });
+    } else {
+      res.json({
+        message: "Fetching restaurant info for id: " + id,
+        restaurants: restaurant,
+      });
+    }
+  });
 });
+/* 
+localhost:8082/api/restaurants/611d30d84504fd64ccb07d3b
+*/
 
 //Fetch all documents
 router.get('/restaurants', function(req, res, next) {
-    Restaurant.find({}).then(function (restaurant) {
+  Restaurant.find()
+    .then(function (restaurant) {
         res.send(restaurant);
-    }).catch(next);
+    })
+    .catch(next);
 });
 
-app.use('/api',router);
+/* 
+localhost:8082/api/restaurants
+*/
+
+var port = process.env.PORT || 8082; //set our port
 app.listen(port); // create a server that browsers can connect to
 console.log("Magic happened at port "+port);
