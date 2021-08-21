@@ -2,16 +2,12 @@
 var express = require('express'); //call express
 var app = express(); //define our app using express
 const mongoose = require('mongoose');
-const { schema } = require('./restaurant');
+const Restaurant = require('./restaurant');
 var router = express.Router();
 
 
-//made connection
+//connect to mongoDB
 mongoose.connect('mongodb+srv://apiuser:abcd1234@cluster0.3dagi.mongodb.net/myFirstDatabase?retryWrites=true&w=majority');
-
-//define classes
-const Restaurant = require('./restaurant');
-
 
 // Middleware
 app.use(express.urlencoded({extended:true}));
@@ -226,28 +222,55 @@ localhost:8082/api/restaurants/611e8c93a6cb5595f7deb100/reviews/611e8d11a6cb5595
 */
 
 
-
+//filter subdocument by id - Menus
+router.get('/restaurants/:id/menus/:menus_id', (req, res) => {
+  const id = req.params.id;
+  Restaurant.findById({ _id: id }, (err, restaurant) => {
+    //console.log(req.params.menus_id);
+    if (err) {
+      res.json({ error: "Getting error!" + err });
+    } else {
+      var menus = restaurant.menus.id(req.params.menus_id);
+      res.json(menus);
+    }
+  });
+});
+/* 
+localhost:8082/api/restaurants/6120b5768a6e97ebff646863/menus/6120d43dd64e1ffde3c3a3f1
+{
+    "_id": "6120d43dd64e1ffde3c3a3f1",
+    "name": "Mee Maggi+",
+    "description": "Malaysian favourite instant noodles",
+    "price": 5,
+    "imageUrl": "https://fastmee.com/maggiplus.php"
+}
+*/
 
 
 //filter subdocuments by subdocument_id - Reviews
 router.get('/restaurants/:id/reviews/:review_id', (req, res) => {
     const id = req.params.id;
-    const review_id = req.params.review_id;
-    Restaurant.findById({_id: id}, {"_id":review_id, }, (err, restaurant) => {
-        if (err) res.json({ error: "Getting error!" + err });
-        res.json(restaurant);
+    Restaurant.findById({_id: id}, (err, restaurant) => {
+      if (err) {
+        res.json({ error: "Getting error!" + err });
+      } else {
+        var reviews = restaurant.reviews.id(req.params.review_id);
+        res.json(reviews);
+      }
     });
 });
 
+/* 
+localhost:8082/api/restaurants/611e8c93a6cb5595f7deb100/reviews/611e8cf3a6cb5595f7deb111
 
-//filter documents
-router.get('/restaurants/:id/menus/:menus_id', (req, res) => {
-    const id = req.params.id;
-    Restaurant.findById(id, {"menus": {_id: req.params.menus_id}}, (err, restaurant) => {
-        if (err) res.json({ error: "Getting error!" + err });
-        res.json(restaurant);
-    });
-});
+{
+    "_id": "611e8cf3a6cb5595f7deb111",
+    "username": "Suthophone Mengkrap",
+    "rating": 3,
+    "review": "Sawadeekapp...hait!"
+}
+*/
+
 
 
 
@@ -313,6 +336,6 @@ router.get('/restaurants', function(req, res, next) {
 localhost:8082/api/restaurants
 */
 
-var port = process.env.PORT || 8082; //set our port
+var port = process.env.PORT || 8082; //define HTTP port
 app.listen(port); // create a server that browsers can connect to
-console.log("Magic happened at port "+port);
+console.log("Server started on port "+port+ ". Ctrl+Z to terminate the program..");
