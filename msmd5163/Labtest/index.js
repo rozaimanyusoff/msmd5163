@@ -93,7 +93,6 @@ router.get("/students/:matrix/courses", (req, res) => {
 /* 
 localhost:8081/utem/api/students/M203456789/courses
 */
-
 //Retrieve student {name, matrix} by mark $gte: 80 '/studentMarks/:course_id' - 3(f)
 router.get("/studentMarks/:course_id", (req, res) => {
     const course_id = req.params.course_id;
